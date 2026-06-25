@@ -4,28 +4,29 @@ section .text
 op_soma:
     push ebp
     mov ebp, esp
+    push ebx                ; Preserva ebx 
     
-    ; Estrutura da Pilha recebida:
-    ; [ebp + 8]  -> Num1
-    ; [ebp + 12] -> Num2
-    ; [ebp + 16] -> Precisao (0 = 16-bits, 1 = 32-bits)
+    ; Estrutura da Pilha:
+    ; [ebp + 8]  -> precisao (Último a entrar)
+    ; [ebp + 12] -> Num2     (Segundo a entrar)
+    ; [ebp + 16] -> Num1     (Primeiro a entrar)
 
-    mov ecx, [ebp + 16]     ; Lê o indicador de precisão
+    mov ecx, [ebp + 8]      ; Recupera precisao
     cmp ecx, 1
     je .soma_32_bits
 
 .soma_16_bits:
-    ; Operação em 16 bits usando registradores parciais (AX, DX)
-    mov ax, [ebp + 8]       ; Pega apenas os 16 bits inferiores de Num1
-    add ax, [ebp + 12]      ; Soma com os 16 bits inferiores de Num2
-    cwde                    ; Estende o sinal de AX para EAX (retorno padrão do roteiro)
+    mov eax, [ebp + 16]     
+    mov ebx, [ebp + 12]     
+    add ax, bx              ; Soma os 16 bits menos signi.
+    movsx eax, ax           ; bota o sinal de AX pra EAX 
     jmp .fim
 
 .soma_32_bits:
-    ; Operação nativa em 32 bits
-    mov eax, [ebp + 8]
-    add eax, [ebp + 12]
+    mov eax, [ebp + 16]     
+    add eax, [ebp + 12]     
 
 .fim:
+    pop ebx
     pop ebp
     ret
