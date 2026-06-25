@@ -1,5 +1,6 @@
 global _start
 extern op_soma          ; SOMA.ASM
+extern op_subtracao     ; SUBTRACAO.ASM
 
 section .data
     msg_nome      db "Bem-vindo. Digite seu nome: ", 0
@@ -16,6 +17,8 @@ section .data
     len_m_tit     equ $ - menu_tit
     menu_opt1     db "1: SOMA", 10, 0
     len_m_opt1    equ $ - menu_opt1
+    menu_opt2     db "2: SUBTRACAO", 10, 0   
+    len_m_opt2    equ $ - menu_opt2
     menu_opt7     db "7: SAIR", 10, 0
     len_m_opt7    equ $ - menu_opt7
     menu_cmd      db "Opção > ", 0
@@ -82,16 +85,25 @@ v_menu:
     push dword len_m_tit
     push dword menu_tit
     call print_string
+    
     push dword len_m_opt1
     push dword menu_opt1
     call print_string
+
+    ; ADICIONADO: Print da opção 2 no menu
+    push dword len_m_opt2
+    push dword menu_opt2
+    call print_string
+
     push dword len_m_opt7
     push dword menu_opt7
     call print_string
+    
     push dword len_m_cmd
     push dword menu_cmd
     call print_string
-    add esp, 32
+    
+    add esp, 40
 
     ; Lê a opção do menu
     call ler_num_32
@@ -100,8 +112,14 @@ v_menu:
     cmp dword [opcao_menu], 7
     je Sair
 
+    ; Desvios do menu apontando para o bloco de input
     cmp dword [opcao_menu], 1
-    jne v_menu            
+    je .executa_soma
+
+    cmp dword [opcao_menu], 2
+    je .executa_soma
+
+    jmp v_menu  
 
 .executa_soma:
     ; Pede Num 1
@@ -141,10 +159,21 @@ v_menu:
 
 .chama_soma:
     push dword [precisao] ; Terceiro argumento: precisão
+    
+    ; Verifica qual operacao chamar baseado na escolha do menu
+    cmp dword [opcao_menu], 2
+    je .chama_sub
+    
     call op_soma
-    add esp, 12           ; Limpa a pilha
+    jmp .retorno_calculo
+    
+.chama_sub:
+    call op_subtracao
 
-    push eax              ; mantem o resultado da soma de EAX 
+.retorno_calculo:
+    add esp, 12           ; Limpa os 3 argumentos da pilha
+
+    push eax              ; mantem o resultado em EAX
 
     ; Exibe o texto "Resultado: "
     push dword len_res
@@ -152,8 +181,8 @@ v_menu:
     call print_string
     add esp, 8
 
-    pop eax               ; Recupera o resultado da soma para EAX
-    push eax              ; Passa o número obtido para a função de exibir
+    pop eax               ; Recupera o resultado para EAX
+    push eax              ; Passa para a função de exibir
     call print_num
     add esp, 4
 

@@ -8,7 +8,7 @@ FLAGS_LD = -m elf_i386
 TARGET = montador_calc
 
 # Objetos que serão ligados juntos
-OBJS = CALCULADORA.o SOMA.o
+OBJS = CALCULADORA.o SOMA.o SUBTRACAO.o
 
 all: $(TARGET)
 
@@ -20,6 +20,9 @@ CALCULADORA.o: CALCULADORA.ASM
 
 SOMA.o: SOMA.ASM
 	$(NASM) $(FLAGS_NASM) SOMA.ASM -o SOMA.o
+
+SUBTRACAO.o: SUBTRACAO.ASM
+	$(NASM) $(FLAGS_NASM) SUBTRACAO.ASM -o SUBTRACAO.o
 
 clean:
 	rm -f *.o $(TARGET)
