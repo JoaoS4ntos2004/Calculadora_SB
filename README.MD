@@ -8,4 +8,8 @@
 Para compilar todo o projeto automaticamente e gerar o único executável unificado, execute o comando na raiz da pasta:
 
 ```bash
-make
+make clean && make
+
+./montador_calc
+
+sudo apt update && sudo apt install nasm make gcc-multilib g++-multilib libc6-i386

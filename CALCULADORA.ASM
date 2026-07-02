@@ -1,6 +1,14 @@
 global _start
-extern op_soma          ; SOMA.ASM
-extern op_subtracao     ; SUBTRACAO.ASM
+global msg_overflow      
+global len_overflow
+global print_string
+
+extern op_soma          
+extern op_subtracao     
+extern op_multiplicacao  
+extern op_divisao
+extern op_exponenciacao 
+extern op_mod        
 
 section .data
     msg_nome      db "Bem-vindo. Digite seu nome: ", 0
@@ -19,10 +27,21 @@ section .data
     len_m_opt1    equ $ - menu_opt1
     menu_opt2     db "2: SUBTRACAO", 10, 0   
     len_m_opt2    equ $ - menu_opt2
+    menu_opt3     db "3: MULTIPLICACAO", 10, 0 
+    len_m_opt3    equ $ - menu_opt3
+    menu_opt4     db "4: DIVISAO", 10, 0       
+    len_m_opt4    equ $ - menu_opt4
+    menu_opt5     db "5: EXPONENCIACAO", 10, 0 
+    len_m_opt5    equ $ - menu_opt5
+    menu_opt6     db "6: MOD", 10, 0           
+    len_m_opt6    equ $ - menu_opt6
     menu_opt7     db "7: SAIR", 10, 0
     len_m_opt7    equ $ - menu_opt7
     menu_cmd      db "Opção > ", 0
     len_m_cmd     equ $ - menu_cmd
+
+    msg_overflow  db "OCORREU OVERFLOW.", 10, 0 
+    len_overflow  dd $ - msg_overflow
 
     msg_num1      db "Digite o primeiro número: ", 0
     len_num1      equ $ - msg_num1
@@ -90,9 +109,29 @@ v_menu:
     push dword menu_opt1
     call print_string
 
-    ; ADICIONADO: Print da opção 2 no menu
+
     push dword len_m_opt2
     push dword menu_opt2
+    call print_string
+
+    ; Multiplicação
+    push dword len_m_opt3
+    push dword menu_opt3
+    call print_string
+
+    ; Divisão
+    push dword len_m_opt4
+    push dword menu_opt4
+    call print_string
+
+    ; Exponenciação
+    push dword len_m_opt5
+    push dword menu_opt5
+    call print_string
+
+    ; MOD
+    push dword len_m_opt6
+    push dword menu_opt6
     call print_string
 
     push dword len_m_opt7
@@ -103,7 +142,7 @@ v_menu:
     push dword menu_cmd
     call print_string
     
-    add esp, 40
+    add esp, 72
 
     ; Lê a opção do menu
     call ler_num_32
@@ -112,11 +151,23 @@ v_menu:
     cmp dword [opcao_menu], 7
     je Sair
 
-    ; Desvios do menu apontando para o bloco de input
+    ; aponta pbloco de input
     cmp dword [opcao_menu], 1
     je .executa_soma
 
     cmp dword [opcao_menu], 2
+    je .executa_soma
+
+    cmp dword [opcao_menu], 3   
+    je .executa_soma
+
+    cmp dword [opcao_menu], 4   
+    je .executa_soma
+
+    cmp dword [opcao_menu], 5   
+    je .executa_soma
+
+    cmp dword [opcao_menu], 6 
     je .executa_soma
 
     jmp v_menu  
@@ -160,29 +211,53 @@ v_menu:
 .chama_soma:
     push dword [precisao] ; Terceiro argumento: precisão
     
-    ; Verifica qual operacao chamar baseado na escolha do menu
+    ; Verifica qual operacao chamar 
     cmp dword [opcao_menu], 2
     je .chama_sub
+    cmp dword [opcao_menu], 3
+    je .chama_mult
+    cmp dword [opcao_menu], 4
+    je .chama_div
+    cmp dword [opcao_menu], 5
+    je .chama_exp
+    cmp dword [opcao_menu], 6
+    je .chama_mod
     
     call op_soma
     jmp .retorno_calculo
     
 .chama_sub:
     call op_subtracao
+    jmp .retorno_calculo
+
+.chama_mult:
+    call op_multiplicacao
+    jmp .retorno_calculo
+
+.chama_div:
+    call op_divisao
+    jmp .retorno_calculo
+
+.chama_exp:
+    call op_exponenciacao
+    jmp .retorno_calculo
+
+.chama_mod:
+    call op_mod
 
 .retorno_calculo:
     add esp, 12           ; Limpa os 3 argumentos da pilha
 
-    push eax              ; mantem o resultado em EAX
+    push eax              
 
-    ; Exibe o texto "Resultado: "
+    ; "Resultado: "
     push dword len_res
     push dword msg_res
     call print_string
     add esp, 8
 
     pop eax               ; Recupera o resultado para EAX
-    push eax              ; Passa para a função de exibir
+    push eax              ; Passa p função exibir
     call print_num
     add esp, 4
 
@@ -192,7 +267,15 @@ v_menu:
     call print_string
     add esp, 8
 
+    sub esp, 4            ; Reservaword temp local na pilha
+    push dword 1          ; ler 1 byte (ENTER)
+    lea eax, [esp+4]      ; Passa o endereço desse espaço 
+    push eax
+    call ler_string
+    add esp, 12           ; Limpa os argumentos da chamada e remove o espaço local da pilha
+
     jmp v_menu
+
 
 Sair:
     mov eax, 1          
@@ -252,7 +335,7 @@ ler_num_32:
     push esi
     push edi
 
-    ; enche o buffer local com zeros para evitar lixo de memória
+    ; enche o buffer local com zeros p evitar lixo de mem
     mov dword [ebp-16], 0
     mov dword [ebp-12], 0
     mov dword [ebp-8], 0
@@ -262,7 +345,7 @@ ler_num_32:
     push dword 12
     push eax
     call ler_string
-    add esp, 8          ; EAX tem o número de bytes lidos pelo sys_read
+    add esp, 8          ; EAX tem o n de bytes lidos pelo sys_read
 
     lea esi, [ebp-16]   
     mov ecx, eax        
@@ -331,7 +414,7 @@ ler_num_16:
 
     call ler_num_32     ; retorna o valor em EAX
     
-    ; Pega os 16 bits inferiores (AX) e bota o sinal em EAX tirando qualquer lixo nos 16 bits superiores.
+    ; Pega 16 bits inferiores (AX) e bota o sinal em EAX tirando qualquer lixo nos 16 bits superiores.
     movsx eax, ax       
 
     pop ebp
@@ -344,9 +427,9 @@ print_num:
     sub esp, 12         ; Buffer local de 12 bytes na pilha para montar o string
     push ebx
 
-    mov eax, [ebp+8]    ; Pega o número inteiro recebido por argumento [cite: 652]
-    lea ecx, [ebp-1]    ; ECX aponta para o final do buffer local (montagem de trás pra frente)
-    mov byte [ecx], 10  ; Coloca quebra de linha inicial se desejado (usaremos apenas os caracteres)
+    mov eax, [ebp+8]    ; Pega o número inteiro  
+    lea ecx, [ebp-1]    ; ECX aponta para o final do buffer local 
+    mov byte [ecx], 10  ; quebra de linha
     
     xor edi, edi        ; Flag de sinal negativo
     cmp eax, 0
@@ -355,29 +438,29 @@ print_num:
     neg eax             ; Torna positivo para processar os caracteres
 
 .prepara_divisao:
-    mov ebx, 10         ; Divisor básico
+    mov ebx, 10         
 
 .loop_divisao:
     xor edx, edx
-    div ebx             ; Divide EAX por 10. Quociente em EAX, Resto em EDX
+    div ebx             ; Divide EAX por 10 quociente em EAX resto EDX
     add dl, '0'         ; Converte o resto numérico para caractere ASCII
     dec ecx             ; Recua o ponteiro do buffer local
     mov [ecx], dl       ; Grava o caractere
     cmp eax, 0
     jne .loop_divisao
 
-    ; Se for negativo, coloca o sinal de '-' na frente
+    ; Se for negativo coloca - na frente
     cmp edi, 1
     jne .imprime_resultado
     dec ecx
     mov byte [ecx], '-'
 
 .imprime_resultado:
-    ; Calcula o tamanho da string calculando a distância de EBP até ECX
+    ; Calcula o tamanho da string 
     lea edx, [ebp]
     sub edx, ecx
     
-    ; Exibe utilizando a função padrão do projeto (passando parâmetros por pilha) [cite: 635, 663]
+
     push edx            ; Tamanho
     push ecx            ; Ponteiro do buffer local na pilha
     call print_string
