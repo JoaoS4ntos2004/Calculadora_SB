@@ -1,15 +1,33 @@
-# Calculadora Multi-Precisão IA-32
+TRABALHO 2 - SOFTWARE BÁSICO (CALCULADORA IA-32)
 
-**Sistema Operacional Utilizado:** Linux (Ubuntu 22.04 LTS / i386 emulado)  
-**Ferramentas:** NASM Compiler & GNU Gold Linker (ld)
+SISTEMA OPERACIONAL UTILIZADO:
+Linux (Ubuntu via WSL)
 
-## Como Compilar e Rodar
+REQUISITOS E INSTALAÇÃO:
+Para que o ambiente possua o montador e as bibliotecas de 32 bits necessárias,
+execute o seguinte comando no terminal antes de compilar:
 
-Para compilar todo o projeto automaticamente e gerar o único executável unificado, execute o comando na raiz da pasta:
+    sudo apt update && sudo apt install nasm make gcc-multilib g++-multilib libc6-i386
 
-```bash
-make clean && make
+COMO COMPILAR E GERAR O EXECUTÁVEL:
+Para compilar todos os módulos e ligar o binário final, execute:
 
-./montador_calc
+    make clean && make
 
-sudo apt update && sudo apt install nasm make gcc-multilib g++-multilib libc6-i386
+COMO EXECUTAR O PROGRAMA:
+Após a compilação, o binário "montador_calc" será gerado. Inicie-o com:
+
+    ./montador_calc
+
+COMO UTILIZAR E EXEMPLO DE TESTE:
+1. Digite seu nome e escolha a precisão:
+   - "0" para trabalhar em 16 bits 
+   - "1" para trabalhar em 32 bits
+2. Selecione a operação no menu e insira os dois números.
+3. O resultado será exibido. Pressione ENTER para retornar ao menu.
+
+OBSERVAÇÃO:
+Nas operações de MULTIPLICAÇÃO e EXPONENCIACAO, caso o resultado ultrapasse o limite da precisão escolhida (16 ou 32 bits), o programa exibirá "OCORREU OVERFLOW." e será encerrado imediatamente, conforme especificado no roteiro.
+
+INTEGRANTES DO GRUPO:
+- João Pedro Fernandes Santos - 222025342
